@@ -121,7 +121,9 @@ class TestRunner
                 it->second->tests.size()<< std::endl;
         }
     }
-
+    int GetRetCode(){
+        return m_retCode;
+    }
     void AddTest(std::string caseName, std::string testName, int (*f)())
     {        
         auto testCase = m_cases.find(caseName);        
@@ -133,7 +135,7 @@ class TestRunner
     }
     /** The vector of test casts (sets of tests) */
     std::unordered_map<std::string, TestCase *> m_cases;
-
+    int m_retCode;
     TestRunner()
     {
     }

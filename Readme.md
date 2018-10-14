@@ -14,8 +14,6 @@ int main(int argc, char **argv)
 {
     std::cout << "Starting tests." << std::endl;
 
-    TestRunner::GetRunner();
-
     TestRunner::GetRunner()->AddTest(
         "HTTP Request Parsing",
         "Must parse protocol version",
@@ -79,6 +77,6 @@ int main(int argc, char **argv)
 
     TestRunner::GetRunner()->PrintSummary();
 
-    return 0;
+    return TestRunner::GetRunner()->GetRetCode();
 }
 ~~~~
