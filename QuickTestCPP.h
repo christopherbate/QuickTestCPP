@@ -36,7 +36,7 @@ class Test
         }
         else
         {
-            std::cout << "FAIL" << std::endl;
+            std::cout <<"\033[31;m"<< "FAIL" <<"\033[0m" << std::endl;
             fail = true;
         }
     }
@@ -69,6 +69,15 @@ class TestCase
             (*it)->Run();
             if((*it)->fail){
                 failCount++;
+            }
+        }
+    }
+    void PrintFailures()
+    {
+        for(auto it = tests.begin(); it != tests.end(); it++)
+        {
+            if((*it)->fail){
+                std::cout<<"\033[31;m" << (*it)->name << "\033[0m" << std::endl;
             }
         }
     }
@@ -107,7 +116,16 @@ class TestRunner
         {
             std::cout << it->first << std::endl;
             it->second->Run();
+            std::cout<<std::endl;     
             it++;
+        }           
+    }
+
+    void RunOne(std::string test)
+    {
+        auto testCase = m_cases.find(test);
+        if(testCase != m_cases.end()){
+            testCase->second->Run();
         }
     }
 
@@ -119,6 +137,7 @@ class TestRunner
             std::cout<< it->first <<":"<<
                 it->second->tests.size()-it->second->failCount<<"/"<<
                 it->second->tests.size()<< std::endl;
+                it->second->PrintFailures();                
         }
     }
     int GetRetCode(){
