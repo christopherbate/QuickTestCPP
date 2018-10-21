@@ -36,7 +36,7 @@ class Test
         }
         else
         {
-            std::cout <<"\033[31;m"<< "FAIL" <<"\033[0m" << std::endl;
+            std::cout <<"\033[1;31m"<< "FAIL" <<"\033[0m" << std::endl;
             fail = true;
         }
     }
