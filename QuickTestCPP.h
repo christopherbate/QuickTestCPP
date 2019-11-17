@@ -9,9 +9,121 @@
 #ifndef CTB_TEST
 #define CTB_TEST
 #include <string>
+#include <sstream>
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <iomanip>
+
+/**
+black        30         40
+red          31         41
+green        32         42
+yellow       33         43
+blue         34         44
+magenta      35         45
+cyan         36         46
+white        37         47
+reset             0  (everything back to normal)
+bold/bright       1  (often a brighter shade of the same colour)
+underline         4
+inverse           7  (swap foreground and background colours)
+bold/bright off  21
+underline off    24
+inverse off      27
+**/
+
+const std::string RED = "\033[1;31m";
+const std::string GRN = "\033[32m";
+const std::string RST = "\033[0m";
+
+#define QTEqual(val1, val2) QuickTest::Equal(val1, val2, __FILE__, __LINE__)
+#define QTNotEqual(val1, val2) QuickTest::NotEqual(val1, val2, __FILE__, __LINE__)
+#define QTAlmostEqual(val1, val2, eps) QuickTest::AlmostEqual(val1, val2, eps, __FILE__, __LINE__)
+
+/**
+ * Test Exception class
+ */
+class QuickTestError : public std::exception
+{
+public:
+    QuickTestError(const std::string &errorMsg)
+        : m_errorMsg(errorMsg) {}
+    const char *what()
+    {
+        return m_errorMsg.c_str();
+    }
+
+private:
+    std::string m_errorMsg;
+};
+
+/**
+ * QuickTest Assert Statements
+ */
+class QuickTest
+{
+public:
+    template <typename T1, typename T2>
+    static void Equal(T1 a, T2 b)
+    {
+        T1 c = static_cast<T1>(b);
+        if (a != c)
+        {
+            std::stringstream ss;
+            ss << "NotEqual: " << a << " != " << c;
+            throw QuickTestError(ss.str());
+        }
+    }
+
+    template <typename T1, typename T2>
+    static void Equal(T1 a, T2 b, const char *file, const int line)
+    {
+        std::cout.precision(3);
+        T1 c = static_cast<T1>(b);
+        if (a != c)
+        {
+            std::stringstream ss;
+            ss << "Test Failure at " << file << ":" << line
+               << " NotEqual: " << a << " != " << c;
+            throw QuickTestError(ss.str());
+        }
+    }
+
+    static void NotEqual(void *a, void *b)
+    {
+        if (a == b)
+        {
+            std::string msg = "Equal: " + std::to_string(uint64_t(a)) + " != " + std::to_string(uint64_t(b));
+            throw QuickTestError(msg);
+        }
+    }
+
+    template <typename T1, typename T2>
+    static void NotEqual(T1 a, T2 b, const char *file, const int line)
+    {
+        T1 c = static_cast<T1>(b);
+        if (a == c)
+        {
+            std::stringstream ss;
+            ss << "Test Failure at " << file << ":" << line
+               << " Should not equal: " << a << " == " << c;
+            throw QuickTestError(ss.str());
+        }
+    }
+
+    static void AlmostEqual(float a, float b, float eps, const char *file, const int line)
+    {        
+        if (std::abs(a - b) > eps)
+        {
+            std::stringstream ss;
+            ss << "Test Failure at " << file << ":" << line
+               << ": " << a << " != " << b << " "
+               << " (AlmostEqual)" << (a-b) << " > " << eps;
+            throw QuickTestError(ss.str());
+        }
+    }
+};
 
 /**
  * Represents an individual test.
