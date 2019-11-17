@@ -130,8 +130,8 @@ public:
  */
 class Test
 {
-  public:
-    Test(std::string n, int (*f)())
+public:
+    Test(std::string n, void (*f)())
     {
         name = n;
         func = f;
@@ -139,20 +139,28 @@ class Test
     }
     void Run()
     {
-        std::cout << name << ": " <<std::endl;
-        if (func())
+        std::cout << name << ": " << std::endl;
+        try
         {
-            std::cout << "PASS" << std::endl;
+            func();
+            std::cout << GRN << "Test Passed" << RST << std::endl;
             fail = false;
         }
-        else
+        catch (QuickTestError &e)
         {
-            std::cout <<"\033[1;31m"<< "FAIL" <<"\033[0m" << std::endl;
+            std::cout << RED << "Test Failed \n";
+            std::cout << e.what() << RST << std::endl;
+            fail = true;
+        }
+        catch (std::exception &e)
+        {
+            std::cout << RED << "Test Failed, Fatal Exception \n";
+            std::cout << e.what() << RST << std::endl;
             fail = true;
         }
     }
     bool fail;
-    int (*func)();
+    void (*func)();
     std::string name;
 };
 
@@ -161,11 +169,10 @@ class Test
  */
 class TestCase
 {
-  public:
-    TestCase(std::string name) : m_name(name)
-    {
-        failCount = 0;
-    }
+public:
+    TestCase(std::string name)
+        : m_name(name), failCount(0) {}
+
     ~TestCase()
     {
         for (unsigned int i = 0; i < tests.size(); i++)
@@ -178,23 +185,28 @@ class TestCase
         for (auto it = tests.begin(); it != tests.end(); it++)
         {
             (*it)->Run();
-            if((*it)->fail){
+            std::cout << std::endl;
+            if ((*it)->fail)
+            {
                 failCount++;
             }
         }
     }
     void PrintFailures()
     {
-        for(auto it = tests.begin(); it != tests.end(); it++)
+        for (auto it = tests.begin(); it != tests.end(); it++)
         {
-            if((*it)->fail){
-                std::cout<<"\033[31;m" << (*it)->name << "\033[0m" << std::endl;
+            std::cout << RED;
+            if ((*it)->fail)
+            {
+                std::cout << (*it)->name << std::endl;
             }
+            std::cout << RST;
         }
     }
     std::vector<Test *> tests;
-    int failCount;
     std::string m_name;
+    int failCount;
 };
 
 /**
@@ -203,7 +215,7 @@ class TestCase
  */
 class TestRunner
 {
-  public:
+public:
     /** Returns singleton instance */
     static TestRunner *GetRunner()
     {
@@ -225,40 +237,42 @@ class TestRunner
         auto it = m_cases.begin();
         while (it != m_cases.end())
         {
-            std::cout << it->first << std::endl;
+            std::cout << "--------------------\n";
+            std::cout << it->first << "\n";
+            std::cout << "--------------------\n"
+                      << std::endl;
             it->second->Run();
-            std::cout<<std::endl;     
             it++;
-        }           
+        }
     }
 
     void RunOne(std::string test)
     {
         auto testCase = m_cases.find(test);
-        if(testCase != m_cases.end()){
+        if (testCase != m_cases.end())
+        {
             testCase->second->Run();
         }
     }
 
     void PrintSummary()
     {
-        std::cout<<"======SUMMARY======"<<std::endl;
-        for(auto it = m_cases.begin(); it != m_cases.end(); it++)
+        std::cout << "======SUMMARY======" << std::endl;
+        for (auto it = m_cases.begin(); it != m_cases.end(); it++)
         {
-            std::cout<< it->first <<":"<<
-                it->second->tests.size()-it->second->failCount<<"/"<<
-                it->second->tests.size()<< std::endl;
-                it->second->PrintFailures();                
+            std::cout << it->first << ":" << it->second->tests.size() - it->second->failCount << "/" << it->second->tests.size() << std::endl;
+            it->second->PrintFailures();
         }
     }
-    int GetRetCode(){
+    int GetRetCode()
+    {
         return m_retCode;
     }
-    void AddTest(std::string caseName, std::string testName, int (*f)())
-    {        
-        auto testCase = m_cases.find(caseName);        
+    void AddTest(std::string caseName, std::string testName, void (*f)())
+    {
+        auto testCase = m_cases.find(caseName);
         if (testCase == m_cases.end())
-        {     
+        {
             m_cases[caseName] = new TestCase(caseName);
         }
         m_cases[caseName]->tests.push_back(new Test(testName, f));
